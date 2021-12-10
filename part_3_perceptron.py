@@ -61,14 +61,20 @@ def perceptron(training_set, testing_set):
 	return predictions
 
 if __name__ == '__main__':
-	training_data = random_sample(3, 5)
-	testing_data = random_sample(3, 10000)
+	n = 10
+	training_samples = 5
+	testing_samples = 1000
+
+	training_data = random_sample(n, training_samples)
+	testing_data = random_sample(n, testing_samples)
+
 	training_labels = label(training_data)
 	testing_labels = label(testing_data)
+
 	training_dataset = create_dataset(training_data, training_labels)
 	testing_dataset = create_dataset(testing_data, testing_labels)
-	# print(training_dataset)
-	weights = train_weights(training_dataset)
+
+	# weights = train_weights(training_dataset)
 	predictions = perceptron(training_dataset, testing_dataset)
 	print(predictions)
 	print(testing_labels)
