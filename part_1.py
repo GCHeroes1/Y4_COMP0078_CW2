@@ -1,6 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+global training_data
+global testing_data
+
 def get_data(dat_file):
     return np.loadtxt(dat_file)
 
@@ -55,7 +58,7 @@ def trainGen(data):
                 y = 1
             else:
                 y = -1
-            if (y * preds[z] <= 0):
+            if y * preds[z] <= 0:
                 GLBcls[z, i] = GLBcls[z, i] - mysign(preds[z])
             if preds[z] > maxc:
                 maxc = preds[z]
@@ -102,8 +105,8 @@ def demo(train, test):
         rtn = testClassifiers(train, test)
         print(f"Testing - epoch  {str(i)} required {str(rtn)} with a test error of \n")
 
-if __name__ == '__main__':
 
+if __name__ == '__main__':
     training_data = get_data('dtrain123.dat')
     testing_data = get_data('dtest123.dat')
     # print(training_data.shape)
