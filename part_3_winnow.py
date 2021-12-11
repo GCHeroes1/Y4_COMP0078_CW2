@@ -1,6 +1,8 @@
 import numpy as np
 import part_3_perceptron as perceptron
 
+np.random.seed(0)
+
 def random_sample(dimension, n_times):
 	data = np.random.choice((0, 1), n_times*dimension)
 	return np.reshape(data, (n_times, dimension))
@@ -24,7 +26,7 @@ def train_weights(training_set, n):
 					# print("made a mistake")
 					weights[i] = weights[i] * 2 ** np.dot((y_t - y_hat_t), sample[i])
 					# weights = weights + np.dot(y_t, sample)
-					# mistakes += 1
+				mistakes += 1
 		# print(weights)
 	return weights
 
