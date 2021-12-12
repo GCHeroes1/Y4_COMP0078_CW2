@@ -56,7 +56,7 @@ if __name__ == '__main__':
     training_samples = 20
     testing_samples = 1000
 
-    training_data = perceptron.random_sample(n, training_samples)*0.5
+    training_data = perceptron.random_sample(n, training_samples)
     testing_data = perceptron.random_sample(n, testing_samples)
 
     training_labels = perceptron.label(training_data)
@@ -67,6 +67,7 @@ if __name__ == '__main__':
     # print(weights[0])
     # print((weights * training_labels)[0])
     print(weights[0])
+    #   todo use weights to calculate the y=mx+c line that goes through all of the "weights" (points)
     testing_dataset = perceptron.create_dataset(testing_data, testing_labels)
     print(testing_data[0] * weights[0])
     # weights = train_weights(training_dataset, n)
