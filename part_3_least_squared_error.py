@@ -52,9 +52,9 @@ def train_weights(training_set, n):
     return weights
 
 if __name__ == '__main__':
-    n = 10
-    training_samples = 20
-    testing_samples = 1000
+    n = 100
+    training_samples = 400
+    testing_samples = 100
 
     training_data = perceptron.random_sample(n, training_samples)
     testing_data = perceptron.random_sample(n, testing_samples)
@@ -63,16 +63,20 @@ if __name__ == '__main__':
     testing_labels = perceptron.label(testing_data)
 
     training_dataset = perceptron.create_dataset(training_data, training_labels)
-    weights = np.linalg.pinv(training_data) * training_labels
+    weights = np.dot(np.linalg.pinv(training_data), training_labels)
     # print(weights[0])
     # print((weights * training_labels)[0])
-    print(weights[0])
-    #   todo use weights to calculate the y=mx+c line that goes through all of the "weights" (points)
-    testing_dataset = perceptron.create_dataset(testing_data, testing_labels)
-    print(testing_data[0] * weights[0])
-    # weights = train_weights(training_dataset, n)
     # print(weights)
-    # prediction = predict(training_dataset[0], weights=[1, 1, 1])
-    # print("works")
-    # print(prediction)
+    testing_dataset = perceptron.create_dataset(testing_data, testing_labels)
+    mistakes = 0
+    for i in range(len(testing_dataset)):
+        prediction = np.dot(testing_dataset[i][:-1], weights)
+        rounded_pred = np.round(prediction)
+        # print(rounded_pred)
+        # print(np.around(np.dot(testing_dataset[i][:-1], weights)), decimals=2)
+        if rounded_pred != testing_dataset[i][-1]:
+            mistakes += 1
+    # print(np.round(np.dot(testing_dataset[i][:-1], weights)))
+    # print(testing_dataset[i][-1])
 
+    print(mistakes/len(testing_dataset))
