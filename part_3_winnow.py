@@ -76,7 +76,7 @@ if __name__ == '__main__':
 	if not os.path.exists('plots'):
 		os.makedirs('plots')
 
-	complexity = 500
+	complexity = 50
 	optimisation = list(tuple())
 	p_bar = tqdm(complexity)
 	with futures.ThreadPoolExecutor(max_workers=12) as executor:
@@ -90,7 +90,7 @@ if __name__ == '__main__':
 	n_values = [n[0] for n in optimisation]
 	m_values = [m[1] for m in optimisation]
 	plt.plot(n_values, m_values)
-	plt.title(f"Winnow generalisation error optimisation up to dimensionality of {str(complexity)}")
+	plt.title(f"Winnow generalisation error up to dimensionality of {str(complexity)}")
 	plt.xlabel("dimension")
 	plt.ylabel("sample size")
 	plt.savefig(f'./plots/part3_a_winnow_{str(complexity)}.png')

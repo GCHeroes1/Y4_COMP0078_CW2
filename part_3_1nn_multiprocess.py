@@ -1,7 +1,8 @@
 import numpy as np
 import part_3_perceptron as perceptron
 import matplotlib.pyplot as plt
-from concurrent import futures
+from multiprocessing import Process, Queue
+import multiprocessing as mp
 from tqdm import tqdm
 import os
 
@@ -28,12 +29,12 @@ def calc_distance_array_2(x1, x2):
 def nearest_neighbour(sample, dataset):
     distances = []
     for point in dataset:
-        temp_dist = calc_distance(sample[:-1], point[:-1])
+        temp_dist = calc_distance_array_2(sample[:-1], point[:-1])
         distances.append((point, temp_dist))
     distances.sort(key=lambda x:x[1])
     return distances[0][0]
 
-def concurrent_optimised_sample_complexity(dimension):
+def concurrent_optimised_sample_complexity(queue, dimension):
     dimension_test = tuple()
     generalisation_error = 1
     sample_count = 1
@@ -47,20 +48,37 @@ def concurrent_optimised_sample_complexity(dimension):
         generalisation_error = mistakes/len(testing_dataset)
         dimension_test = (dimension, sample_count, generalisation_error)
         sample_count += 5
-    optimisation.append(dimension_test)
+    queue.put(dimension_test)
+
 
 if __name__ == '__main__':
     if not os.path.exists('plots'):
         os.makedirs('plots')
 
-    complexity = 5
+    complexity = 20
     optimisation = list(tuple())
     p_bar = tqdm(complexity)
-    with futures.ThreadPoolExecutor(max_workers=12) as executor:
-        futures_to_jobs = {executor.submit(concurrent_optimised_sample_complexity, job): job for job in
-                           range(complexity + 1)}
-        for _ in futures.as_completed(futures_to_jobs):
-            p_bar.update(1)
+
+    # pool = mp.Pool(mp.cpu_count())
+    # pool.map(concurrent_optimised_sample_complexity, range(1, complexity+1))
+
+    queue = Queue()
+    processes = [Process(target=concurrent_optimised_sample_complexity, args=(queue, x)) for x in range(1, complexity+1)]
+
+    for p in processes:
+        p.start()
+    for p in processes:
+        p.join()
+        p_bar.update(1)
+
+    optimisation = [queue.get() for p in processes]
+
+    # with futures.ThreadPoolExecutor(max_workers=12) as executor:
+    #     futures_to_jobs = {executor.submit(concurrent_optimised_sample_complexity, job): job for job in
+    #                        range(complexity + 1)}
+    #     for _ in futures.as_completed(futures_to_jobs):
+    #         p_bar.update(1)
+    #         p_bar.refresh()
 
     optimisation.sort(key=lambda x: x[0])
     print(optimisation)
@@ -71,7 +89,7 @@ if __name__ == '__main__':
     plt.title(f"1-NN generalisation error up to dimensionality of {str(complexity)}")
     plt.xlabel("dimension")
     plt.ylabel("sample size")
-    plt.savefig(f'./plots/part3_a_1nn_{str(complexity)}.png')
+    plt.savefig(f'./plots/part3_a_1nn_{str(complexity)}_multiprocess.png')
 
     # n = 4
     # training_samples = 10

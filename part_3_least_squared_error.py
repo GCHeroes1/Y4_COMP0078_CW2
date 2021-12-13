@@ -35,7 +35,7 @@ if __name__ == '__main__':
     if not os.path.exists('plots'):
         os.makedirs('plots')
 
-    complexity = 50
+    complexity = 20
     optimisation = list(tuple())
     p_bar = tqdm(complexity)
     with futures.ThreadPoolExecutor(max_workers=12) as executor:
