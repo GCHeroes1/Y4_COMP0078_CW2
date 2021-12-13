@@ -75,4 +75,3 @@ if __name__ == '__main__':
         if prediction != testing_dataset[i][-1]:
             mistakes += 1
     print(mistakes/len(testing_dataset))
-    # print(f"expecting {str(testing_dataset[i][-1])}, but got {str(prediction)}")
