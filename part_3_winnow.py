@@ -27,11 +27,8 @@ def train_weights(training_set, n):
 			y_t = sample[-1]
 			if y_t != y_hat_t:
 				for i in range(len(weights)):
-					# print("made a mistake")
 					weights[i] = weights[i] * 2 ** np.dot((y_t - y_hat_t), sample[i])
-					# weights = weights + np.dot(y_t, sample)
 				mistakes += 1
-		# print(weights)
 	return weights
 
 def winnow(training_set, testing_set, n):
@@ -86,7 +83,6 @@ if __name__ == '__main__':
 		futures_to_jobs = {executor.submit(concurrent_optimised_sample_complexity, job): job for job in range(complexity+1)}
 		for _ in futures.as_completed(futures_to_jobs):
 			p_bar.update(1)
-			p_bar.refresh()
 
 	optimisation.sort(key=lambda x:x[0])
 	print(optimisation)

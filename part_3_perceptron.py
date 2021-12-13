@@ -4,11 +4,6 @@ import os
 from concurrent import futures
 from tqdm import tqdm
 
-# perceptron
-# winnow
-# least squares
-# 1-nearest neighbours
-
 np.random.seed(0)
 
 def random_sample(dimension, n_times):
@@ -44,19 +39,11 @@ def train_weights(training_set):
 			y_t = sample[-1]
 			mistake = y_hat_t * y_t
 			if mistake <= 0:
-				# print("made a mistake")
 				weights = weights + np.dot(y_t, sample)
 				mistakes += 1
-		# print(weights)
 	return weights
 
 def perceptron(training_set, testing_set):
-	# assume linearly separable data
-	# split classes, nearest 2 points is atleast gamma
-	# v is vector corresponding to linear classifier
-	# assume all data lives in radius R around origin, y_t matches prediction of linear predictor v and the gap is larger than gamma
-	# get data sequence, initialise weight to w, use m to count number of mis-classifications.
-	# If we make a mistake, update internal state of algorithm, update weight vector, add new example multipled by y_t to weight vector, record that we incurred mistake
 	predictions = np.zeros(len(testing_set))
 	weights = train_weights(training_set)
 	for i in range(len(testing_set)):
@@ -92,9 +79,7 @@ def sample_complexity(dimensions, training_samples):
 				if predictions[z] != testing_dataset[z][-1]:
 					mistakes += 1
 			generalisation_error = mistakes/len(predictions)
-			# print(i, x)
 			dimension_test.append((i, x, generalisation_error))
-		# print(dimension_test)
 		dimension_test.sort(key=lambda test: test[2])
 		optimal_generalisation_error.append(dimension_test[0])
 	return optimal_generalisation_error
@@ -139,28 +124,25 @@ if __name__ == '__main__':
 	if not os.path.exists('plots'):
 		os.makedirs('plots')
 
-	complexity = 50
+	complexity = 200
 	optimisation = list(tuple())
 	p_bar = tqdm(complexity)
 	with futures.ThreadPoolExecutor(max_workers=12) as executor:
 		futures_to_jobs = {executor.submit(concurrent_optimised_sample_complexity, job): job for job in range(complexity+1)}
 		for _ in futures.as_completed(futures_to_jobs):
 			p_bar.update(1)
-			p_bar.refresh()
 
 	optimisation.sort(key=lambda x:x[0])
 	print(optimisation)
-	# optimisation = optimised_sample_complexity(complexity)
-	# print(optimisation)
+
 	n_values = [n[0] for n in optimisation]
 	m_values = [m[1] for m in optimisation]
 	plt.plot(n_values, m_values)
-	plt.title(f"Perceptron generalisation error optimisation up to dimensionality of {str(complexity)}")
+	plt.title(f"Perceptron generalisation error up to dimensionality of {str(complexity)}")
 	plt.xlabel("dimension")
 	plt.ylabel("sample size")
-	# plt.legend()
-	# plt.show()
 	plt.savefig(f'./plots/part3_a_perceptron_{str(complexity)}.png')
+
 	# n = 10
 	# training_samples = 5
 	# testing_samples = 1000
