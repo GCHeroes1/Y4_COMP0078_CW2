@@ -1,15 +1,18 @@
 import numpy as np
 import part_3_perceptron as perceptron
 import matplotlib.pyplot as plt
+# from concurrent import futures
 from tqdm import tqdm
 import os
+# from line_profiler_pycharm import profile
 
 np.random.seed(0)
 
 
+# @profile
 def predict(sample, dataset):
-    neighbour = nearest_neighbour(sample, dataset)
-    # neighbour = dataset[np.argmin(np.linalg.norm(sample[:-1] - dataset[:, :-1], axis=1))]
+    # neighbour = nearest_neighbour(sample, dataset)
+    neighbour = nearest_neighbour_vectorized(sample, dataset)
     label = neighbour[-1]
     return label
 
@@ -26,6 +29,7 @@ def calc_distance_array(x1, x2):
     return np.sqrt(dist)
 
 
+# @profile
 def nearest_neighbour(sample, dataset):
     distances = []
     for point in dataset:
@@ -35,6 +39,7 @@ def nearest_neighbour(sample, dataset):
     return distances[0][0]
 
 
+# @profile
 def nearest_neighbour_vectorized(sample, dataset):
     # distances_y = np.linalg.norm(sample[:-1] - dataset[:, :-1], axis=1)
     # min_index = np.argmin(distances_y)
@@ -43,7 +48,7 @@ def nearest_neighbour_vectorized(sample, dataset):
     return dataset[np.argmin(np.linalg.norm(sample[:-1] - dataset[:, :-1], axis=1))]
 
 
-def concurrent_optimised_sample_complexity(dimension, count):
+def concurrent_optimised_sample_complexity(dimension, n):
     dimension_test = tuple()
     generalisation_error = 1
     sample_count = 1
@@ -51,15 +56,12 @@ def concurrent_optimised_sample_complexity(dimension, count):
         training_dataset, testing_dataset = perceptron.setup(dimension, sample_count)
         mistakes = 0
         for i in range(len(testing_dataset)):
-            # prediction = training_dataset[np.argmin(np.linalg.norm(testing_dataset[i][:-1] - training_dataset[:, :-1],
-            #                                                        axis=1))][-1]
-            # uncomment for performance
             prediction = predict(testing_dataset[i], training_dataset)
             if prediction != testing_dataset[i][-1]:
                 mistakes += 1
         generalisation_error = mistakes / len(testing_dataset)
         dimension_test = (dimension, sample_count, generalisation_error)
-        sample_count += count
+        sample_count += n
     optimisation.append(dimension_test)
 
 
@@ -67,12 +69,19 @@ if __name__ == '__main__':
     if not os.path.exists('plots'):
         os.makedirs('plots')
 
+    # complexity = 9
+    n = 5
     complexity = 20
-    sample_count = 2
     optimisation = list(tuple())
     p_bar = tqdm(smoothing=1)
+    # with futures.ThreadPoolExecutor(max_workers=1) as executor:
+    #     futures_to_jobs = {executor.submit(concurrent_optimised_sample_complexity, job): job for job in
+    #                        range(complexity + 1)}
+    #     for _ in futures.as_completed(futures_to_jobs):
+    #         p_bar.update(1)
+    #         p_bar.refresh()
     for job in range(1, complexity + 1):
-        concurrent_optimised_sample_complexity(job, sample_count)
+        concurrent_optimised_sample_complexity(job, n)
         p_bar.update(1)
 
     optimisation.sort(key=lambda x: x[0])
@@ -84,4 +93,4 @@ if __name__ == '__main__':
     plt.title(f"1-NN generalisation error up to dimensionality of {str(complexity)}")
     plt.xlabel("dimension")
     plt.ylabel("sample size")
-    plt.savefig(f'./plots/part3_a_1nn_{str(complexity)}_vectorised_{str(sample_count)}.png')
+    plt.savefig(f'./plots/part3_a_1nn_{str(complexity)}_vectorised{str(n)}.png')
