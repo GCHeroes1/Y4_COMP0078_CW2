@@ -1,17 +1,13 @@
 from concurrent.futures import ProcessPoolExecutor
-
 import numpy as np
 import part_3_perceptron as perceptron
 import matplotlib.pyplot as plt
-# from concurrent import futures
 from tqdm import tqdm
 import os
-# from line_profiler_pycharm import profile
 
 np.random.seed(0)
 
 
-# @profile
 def concurrent_optimised_sample_complexity(dimension):
     dimension_test = tuple()
     generalisation_error = 1
@@ -36,7 +32,6 @@ if __name__ == '__main__':
     if not os.path.exists('plots'):
         os.makedirs('plots')
 
-    # complexity = 9
     complexity = 20
     optimisation = list(tuple())
     p_bar = tqdm(smoothing=1)
