@@ -43,7 +43,7 @@ def nearest_neighbour_vectorized(sample, dataset):
     # return to_return
     return dataset[np.argmin(np.linalg.norm(sample[:-1] - dataset[:, :-1], axis=1))]
 
-def average_sample_complexity(dimension):
+def average_sample_complexity(dimension, count):
     sample_sizes = list()
     for z in range(10):
         sample_count = 1
@@ -57,7 +57,7 @@ def average_sample_complexity(dimension):
                 if prediction != testing_dataset[i][-1]:
                     mistakes += 1
             generalisation_error = (mistakes / len(testing_dataset))
-            sample_count += 6
+            sample_count += count
         sample_sizes.append(sample_count)
     sample_average = np.average(sample_sizes)
     sample_std = np.std(sample_sizes)
@@ -68,12 +68,12 @@ if __name__ == '__main__':
     if not os.path.exists('plots/1nn'):
         os.makedirs('plots/1nn')
 
-    n = 6
+    n = 1
     complexity = 20
     optimisation = list(tuple())
     p_bar = tqdm(smoothing=1)
     ppe = ProcessPoolExecutor(max_workers=2)
-    for result in ppe.map(average_sample_complexity, range(1, complexity + 1)):
+    for result in ppe.map(average_sample_complexity, range(1, complexity + 1), [n]*complexity):
         optimisation.append(result)
         p_bar.update(1)
 

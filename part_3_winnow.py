@@ -82,7 +82,7 @@ if __name__ == '__main__':
 	optimisation = list(tuple())
 	p_bar = tqdm(smoothing=1)
 	ppe = ProcessPoolExecutor(max_workers=4)
-	for result in ppe.map(average_sample_complexity, range(1, complexity + 1)):
+	for result in ppe.map(average_sample_complexity, range(1, complexity + 1), [n] * complexity):
 		optimisation.append(result)
 		p_bar.update(1)
 
