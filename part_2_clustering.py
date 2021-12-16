@@ -66,7 +66,6 @@ def clustering(c, x):
     laplacian = diagonal_matrix - weight_matrix
     eigenspace = np.linalg.eig(laplacian)
     v_2 = eigenspace[1][1]
-    print(len(v_2))
 
     cluster = np.zeros(len(v_2))
     for i in range(len(v_2)):
@@ -83,27 +82,64 @@ def vectorisedClustering(c, x):
     v_2 = eigenspace[1][1]
     # print(len(v_2))
 
-    # cluster = np.fromfunction(sign, v)
+    cluster = np.fromfunction(sign, v_2)
     return cluster
+
+def c_values():
+    return 2**np.round(np.arange(-10, 10.2, 0.2), 1)
+
+
+def correct_classification():
+    for i in range(len(X)):
+        temp_marker, temp_color = marker[1], color[1]
+        print(dataset[i][0])
+        # print(np.round(X[i][0]))
+        if np.round(dataset[i][0]) == 1:
+            # print("it was 1")
+            temp_marker, temp_color = marker[0], color[0]
+        plt.scatter(X[i, 0], X[i, 1], marker=temp_marker, color=temp_color)
+    plt.title(f"Correct clustering")
+    plt.xlabel("X_1")
+    plt.ylabel("X_2")
+    plt.savefig(f'./plots/clustering/cluster_baseline.png')
+    plt.clf()
+
+
+def original_data():
+    plt.scatter(X[:, 0], X[:, 1])
+    plt.title(f"Original data")
+    plt.xlabel("X_1")
+    plt.ylabel("X_2")
+    plt.savefig(f'./plots/clustering/cluster_original_data.png')
+    plt.clf()
 
 
 if __name__ == '__main__':
+    if not os.path.exists('plots/clustering'):
+        os.makedirs('plots/clustering')
+
     marker = ["o", "x"]
-    color = ['r', 'b']
+    color = ['black', 'blue']
     dataset = get_data('twomoons.dat')
     l = len(dataset)
     n = len(dataset[0]-1)
     X = dataset[:, 1:]
     labels = dataset[:, :1]
-    c = 2**5
-    cluster = clustering(c, X)
 
-    for i in range(len(cluster)):
-        temp_marker, temp_color = marker[1], color[1]
-        if cluster[i] == 1:
-            temp_marker, temp_color = marker[0], color[0]
-        plt.scatter(X[i, 0], X[i, 1], marker=temp_marker, color=temp_color)
-    plt.show()
+    c = c_values()
+    for x in range(len(c)):
+        cluster = clustering(c[x], X)
+
+        for i in range(len(cluster)):
+            temp_marker, temp_color = marker[1], color[1]
+            if cluster[i] == 1:
+                temp_marker, temp_color = marker[0], color[0]
+            plt.scatter(X[i, 0], X[i, 1], marker=temp_marker, color=temp_color)
+        plt.title(f"Clustering for c = 2^{str(np.round(np.round(np.arange(-10, 10.2, 0.2), 1))[x])}")
+        plt.xlabel("X_1")
+        plt.ylabel("X_2")
+        plt.savefig(f'./plots/clustering/cluster_{str(np.round(np.arange(-10, 10.2, 0.2), 1)[x])}.png')
+        plt.clf()
 
     # l = 20
     # n = 10
