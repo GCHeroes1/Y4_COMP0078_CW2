@@ -99,32 +99,16 @@ def eigenvalues_sorted(laplacian_):
 def clustering(c, x_):               # c is an unknown constant, x is the data matrix (lxl sized)
     c = 2**c
     weight_matrix = weight(c, x_)                         # should be correct, i tested this so fucking much
-    # print(weight_matrix)
     diagonal_matrix = diagonalD(weight_matrix)              # should be correct, tested with unvectorised and vectorised, should really be correct
-    # print(diagonal_matrix[1][1])
-    laplacian = diagonal_matrix - weight_matrix                         # must be correct
-    eigenspace = np.linalg.eig(laplacian)                               # correct
-    # v_2 = eigenspace[1][1]
-    v_2 = (eigenspace[1][np.argsort(eigenspace[0])[1]])                 # this has to be correct but something is wrong?? it doesnt do any better than just eigenspace[1][1] but it performs worse than the line above
-    # eigenspace_2 = eigenvalues_sorted(laplacian)                        # correct?
-    # v_2 = eigenspace_2[1][1]
+    laplacian = np.subtract(diagonal_matrix, weight_matrix)                         # must be correct
+    # eigenspace = np.linalg.eig(laplacian)                               # correct
+    # v_2 = (eigenspace[1][np.argsort(eigenspace[0])[1]])                 # this has to be correct but something is wrong?? it doesnt do any better than just eigenspace[1][1] but it performs worse than the line above
+    eigenspace_2 = eigenvalues_sorted(laplacian)                        # correct?
+    v_2 = eigenspace_2[1][-2]                                           # definitely should be eigenvector corresponding to the second smallest eigenvalue
+
     # plt.scatterplot(range(len(eigenspace[0])), eigenspace[0])
     # plt.show()
     # plt.clf()
-    # v_2 = eigenspace_2[1][1]
-    # print(np.argsort(eigenspace[0])[1])
-    # print(np.round(eigenspace[0][0:5]))
-    # v_3 = eigenspace[1][1]
-    # print(v_2)
-    # print(v_3)
-    # print(eigenspace[0])
-    # lowest_index = np.argmin(eigenspace[0])
-    # lowest = np.partition(eigenspace[:, np.newaxis], 2)[:2]
-    # print(lowest_index)
-    # print(lowest)
-    # print(np.argmin(lowest))
-    # for i in range(len(eigenspace[0])-1):
-    # print(np.argsort(eigenspace[0]))
 
     # if eigenspace[0][0] > eigenspace[0][1]:
     #     # print("fuck")
@@ -137,11 +121,11 @@ def clustering(c, x_):               # c is an unknown constant, x is the data m
 
     cluster_ = np.zeros(len(v_2))
     for z in range(len(v_2)):
-        # if sign(v_2[z]) == 0 or sign(v_2[z]) == 1:
-        #     cluster[z] = 1
-        # else:
-        #     cluster[z] = -1
-        cluster_[z] = sign(v_2[z])
+        if sign(v_2[z]) == 0 or sign(v_2[z]) == 1:
+            cluster_[z] = 1
+        else:
+            cluster_[z] = -1
+        # cluster_[z] = sign(v_2[z])
         # print(f"cluster assigned was {str(cluster[z])} sign(v_2) was {str(sign(v_2[z]))}, v_2 was {str(v_2[z])}")
     return cluster_
 
@@ -162,7 +146,7 @@ def c_values(limits, step):
 
 def correct_classification():
     dataset = get_data('twomoons.dat')
-    X = get_data('twomoons.dat')
+    X = dataset[:, 1:]
     for i in range(len(X)):
         temp_marker, temp_color = marker[1], color[1]
         if np.round(dataset[i][0]) == 1:
@@ -174,7 +158,9 @@ def correct_classification():
     plt.savefig(f'./plots/clustering/cluster_baseline.png')
     plt.clf()
 
-def original_data(X):
+def original_data():
+    dataset = get_data('twomoons.dat')
+    X = dataset[:, 1:]
     plt.scatter(X[:, 0], X[:, 1])
     plt.title(f"Original data")
     plt.xlabel("X_1")
@@ -208,50 +194,10 @@ def calculate_cluster_error(c_value_, dataset_):
 
 def isotropic_gaussian(center, sd, covariance):
     cov_matirx = covariance * np.identity(2)
-    return numpy.random.multivariate_normal(center, cov_matirx, 200)
+    return numpy.random.multivariate_normal(center, cov_matirx, 40)
 
-if __name__ == '__main__':
-    if not os.path.exists('plots/clustering'):
-        os.makedirs('plots/clustering')
 
-    marker = ["o", "x"]
-    color = ['black', 'blue']
-    # dataset = get_data('twomoons.dat')
-    # l = len(dataset)
-    # n = len(dataset[0]-1)
-    # X = dataset[:, 1:]
-    # labels = dataset[:, :1]
-
-    c_array = c_values(100, 0.1)
-
-    # dataset = get_data('twomoons.dat')
-    # generalisations = list(tuple())
-    # pbar = tqdm(total=len(c_array))
-    # for x in range((len(c_array))):
-    #     cluster = clustering(c_array[x], dataset[:, 1:])
-    #     mistakes = 0
-    #     for i in range(len(cluster)):
-    #         if cluster[i] != np.round(dataset[i][0]):
-    #             mistakes += 1
-    #     generalisation_error = (mistakes / len(cluster))
-    #     generalisations.append((generalisation_error, c_array[x]))
-    #     pbar.update(1)
-    #     pbar.refresh()
-    # # print(generalisations)
-    # print(min(generalisations))
-
-    # multiprocess uncomment bellow
-    # dataset = get_data('twomoons.dat')
-    # generalisations_ = list(tuple())
-    # p_bar_ = tqdm(total=len(c_array))
-    # ppe = ProcessPoolExecutor(max_workers=4)
-    # for result in ppe.map(calculate_cluster_error, c_array, [dataset]*len(c_array)):
-    #     generalisations_.append(result)
-    #     p_bar_.update(1)
-    # print(generalisations_)
-    # print(min(generalisations_))
-
-    # plot_cluster(min(generalisations_)[0], dataset[:, 1:], f'./plots/clustering/cluster_{str(min(generalisations_)[0])}.png')
+def gaussian_clustering():
     sd = 0.2
     neg_class = isotropic_gaussian((-0.3, -0.3), sd, 0.04)
     pos_class = isotropic_gaussian((0.15, 0.15), sd, 0.01)
@@ -265,16 +211,58 @@ if __name__ == '__main__':
     labeled_neg_class = np.c_[np.ones(len(neg_class)), np.array(neg_class)]
     labeled_pos_class = np.c_[np.ones(len(pos_class)), np.array(pos_class)]
     dataset = np.vstack((labeled_neg_class, labeled_pos_class))
-    # print(len(dataset))
     generalisations = list(tuple())
     pbar = tqdm(total=len(c_array))
     ppe = ProcessPoolExecutor(max_workers=4)
-    for result in ppe.map(calculate_cluster_error, c_array, [dataset]*len(c_array)):
+    for result in ppe.map(calculate_cluster_error, c_array, [dataset] * len(c_array)):
         generalisations.append(result)
         pbar.update(1)
     print(generalisations)
     print(min(generalisations))
-    # print(generalisations)
-    print(min(generalisations))
     plot_cluster(min(generalisations)[0], dataset[:, 1:],
                  f'./plots/clustering/gaussian_cluster_{str(min(generalisations)[0])}.png')
+
+if __name__ == '__main__':
+    if not os.path.exists('plots/clustering'):
+        os.makedirs('plots/clustering')
+
+    marker = ["o", "x"]
+    color = ['black', 'blue']
+    # dataset = get_data('twomoons.dat')
+    # l = len(dataset)
+    # n = len(dataset[0]-1)
+    # X = dataset[:, 1:]
+    # labels = dataset[:, :1]
+
+    c_array = c_values(20, 0.2)
+
+    dataset = get_data('twomoons.dat')
+    generalisations = list(tuple())
+    # pbar = tqdm(total=len(c_array))
+    for x in range((len(c_array))):
+        cluster = clustering(c_array[x], dataset[:, 1:])
+        mistakes = 0
+        for i in range(len(cluster)):
+            if cluster[i] != np.round(dataset[i][0]):
+                mistakes += 1
+        generalisation_error = (mistakes / len(cluster))
+        generalisations.append((generalisation_error, c_array[x]))
+        # pbar.update(1)
+        # pbar.refresh()
+    # print(generalisations)
+    print(min(generalisations))
+
+    # multiprocess uncomment bellow
+    # dataset = get_data('twomoons.dat')
+    # generalisations_ = list(tuple())
+    # p_bar_ = tqdm(total=len(c_array))
+    # ppe = ProcessPoolExecutor(max_workers=4)
+    # for result in ppe.map(calculate_cluster_error, c_array, [dataset]*len(c_array)):
+    #     generalisations_.append(result)
+    #     p_bar_.update(1)
+    # print(generalisations_)
+    # print(min(generalisations_))
+
+    # plot_cluster(min(generalisations_)[0], dataset[:, 1:], f'./plots/clustering/cluster_{str(min(generalisations_)[0])}.png')
+
+    # gaussian_clustering()
