@@ -81,13 +81,15 @@ def clustering(c, x):
     # print(lowest)
     # print(np.argmin(lowest))
     # for i in range(len(eigenspace[0])-1):
+    # print(np.argsort(eigenspace[0]))
+
     # if eigenspace[0][0] > eigenspace[0][1]:
-    #     # print(np.argsort(eigenspace[0])[1])
-    #     print("fuck")
-    #     lowest = np.argsort(eigenspace[0])[0]
-    #     second_lowest = np.argsort(eigenspace[0])[1]
+    #     # print("fuck")
+    #     lowest = eigenspace[0][np.argsort(eigenspace[0])[0]]
+    #     second_lowest = eigenspace[0][np.argsort(eigenspace[0])[1]]
     #     if lowest > second_lowest:
-    #         print("double fuck")
+    #         print("double fuck")                                        # this would print double fuck if i was wrong
+
     # v_2 = eigenspace[1][4]
 
     cluster = np.zeros(len(v_2))
@@ -192,7 +194,7 @@ if __name__ == '__main__':
     print(generalisations)
     print(min(generalisations))
 
-    plot_cluster(min(generalisations)[1], X)
+    # plot_cluster(min(generalisations)[1], X)
 
     # l = 20
     # n = 10
