@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import os
 import time
 from concurrent.futures import ProcessPoolExecutor
+# from sklearn.metrics.pairwise import euclidean_distances
 
 import numpy.random
 from tqdm import tqdm
@@ -45,19 +46,19 @@ def weight(c, x_):
 #     W = np.zeros((l, l))
 #     for i_ in range(l):
 #         for j in range(l):
-#             W[i_][j] = np.exp(-c * euclidean(x_[i_], x_[j])**2)
+#             W[i_][j] = np.exp(-c * euclidean_distances(x_[i_], x_[j]))
 #             # W[i_][j] = np.exp(-c * np.linalg.norm((x_[i_], x_[j])))
 #     return W
-
-def weight_4(c, x_):
-    l = len(x_)
-    # c is a constant, x is a matrix, l is len(x)
-    W = np.zeros((l, l))
-    for i_ in range(l):
-        for j in range(l):
-            W[i_][j] = np.exp(-c * distance(x_[i_], x_[j]))
-            # W[i_][j] = np.exp(-c * np.linalg.norm((x_[i_], x_[j])))
-    return W
+#
+# def weight_4(c, x_):
+#     l = len(x_)
+#     # c is a constant, x is a matrix, l is len(x)
+#     W = np.zeros((l, l))
+#     for i_ in range(l):
+#         for j in range(l):
+#             W[i_][j] = np.exp(-c * distance(x_[i_], x_[j]))
+#             # W[i_][j] = np.exp(-c * np.linalg.norm((x_[i_], x_[j])))
+#     return W
 
 def distance(x, y):
     return (np.sum((x - y) ** 2)) ** 0.5
@@ -96,15 +97,16 @@ def eigenvalues_sorted(laplacian_):
     eigenVectors = eigenVectors[:, idx]
     return eigenValues, eigenVectors
 
-def clustering(c, x_):               # c is an unknown constant, x is the data matrix (lxl sized)
+def clustering(c, x_):                                                              # c is an unknown constant, x is the data matrix (lxl sized)
     c = 2**c
-    weight_matrix = weight(c, x_)                         # should be correct, i tested this so fucking much
-    diagonal_matrix = diagonalD(weight_matrix)              # should be correct, tested with unvectorised and vectorised, should really be correct
+    weight_matrix = weight(c, x_)                                                   # should be correct, i tested this so fucking much, its the only thing that can be wrong
+    # print(weight_matrix)
+    diagonal_matrix = vectorised_diagonalD(weight_matrix)                           # should be correct, tested with unvectorised and vectorised, should really be correct
     laplacian = np.subtract(diagonal_matrix, weight_matrix)                         # must be correct
-    # eigenspace = np.linalg.eig(laplacian)                               # correct
-    # v_2 = (eigenspace[1][np.argsort(eigenspace[0])[1]])                 # this has to be correct but something is wrong?? it doesnt do any better than just eigenspace[1][1] but it performs worse than the line above
-    eigenspace_2 = eigenvalues_sorted(laplacian)                        # correct?
-    v_2 = eigenspace_2[1][-2]                                           # definitely should be eigenvector corresponding to the second smallest eigenvalue
+    # eigenspace = np.linalg.eig(laplacian)                                         # correct
+    # v_2 = (eigenspace[1][np.argsort(eigenspace[0])[1]])                           # this has to be correct but something is wrong?? it doesnt do any better than just eigenspace[1][1] but it performs worse than the line above
+    eigenspace_2 = eigenvalues_sorted(laplacian)                                    # correct?
+    v_2 = eigenspace_2[1][-2]                                                       # definitely should be eigenvector corresponding to the second smallest eigenvalue
 
     # plt.scatterplot(range(len(eigenspace[0])), eigenspace[0])
     # plt.show()
@@ -196,7 +198,6 @@ def isotropic_gaussian(center, sd, covariance):
     cov_matirx = covariance * np.identity(2)
     return numpy.random.multivariate_normal(center, cov_matirx, 40)
 
-
 def gaussian_clustering():
     sd = 0.2
     neg_class = isotropic_gaussian((-0.3, -0.3), sd, 0.04)
@@ -234,11 +235,11 @@ if __name__ == '__main__':
     # X = dataset[:, 1:]
     # labels = dataset[:, :1]
 
-    c_array = c_values(20, 0.2)
+    c_array = c_values(50, 0.2)
 
     dataset = get_data('twomoons.dat')
     generalisations = list(tuple())
-    # pbar = tqdm(total=len(c_array))
+    pbar = tqdm(total=len(c_array))
     for x in range((len(c_array))):
         cluster = clustering(c_array[x], dataset[:, 1:])
         mistakes = 0
@@ -247,8 +248,8 @@ if __name__ == '__main__':
                 mistakes += 1
         generalisation_error = (mistakes / len(cluster))
         generalisations.append((generalisation_error, c_array[x]))
-        # pbar.update(1)
-        # pbar.refresh()
+        pbar.update(1)
+        pbar.refresh()
     # print(generalisations)
     print(min(generalisations))
 
