@@ -2,6 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 import time
+from concurrent.futures import ProcessPoolExecutor
+from tqdm import tqdm
 
 
 def get_data(dat_file):
@@ -113,10 +115,10 @@ def clustering(c, x):
 #     cluster = np.fromfunction(sign, v_2)
 #     return cluster
 
-def c_values():
-    return np.round(np.arange(-50, 50.2, 0.1), 1)
+def c_values(limits, step):
+    return np.round(np.arange(-limits, limits, step), 1)
 
-def correct_classification():
+def correct_classification(X):
     for i in range(len(X)):
         temp_marker, temp_color = marker[1], color[1]
         print(dataset[i][0])
@@ -132,7 +134,7 @@ def correct_classification():
     plt.clf()
 
 
-def original_data():
+def original_data(X):
     plt.scatter(X[:, 0], X[:, 1])
     plt.title(f"Original data")
     plt.xlabel("X_1")
@@ -154,6 +156,15 @@ def plot_cluster(c, data):
     plt.savefig(f'./plots/clustering/cluster_{str(c)}.png')
     plt.clf()
 
+def calculate_cluster_error(c_value, dataset_):
+    data = dataset_[:, 1:]
+    cluster = clustering(c_value, data)
+    mistakes = 0
+    for z in range(len(cluster)):
+        if cluster[z] != np.round(dataset_[z][0]):
+            mistakes += 1
+    generalisation_error = (mistakes / len(cluster))
+    return generalisation_error, c_value
 
 if __name__ == '__main__':
     if not os.path.exists('plots/clustering'):
@@ -163,11 +174,11 @@ if __name__ == '__main__':
     color = ['black', 'blue']
     dataset = get_data('twomoons.dat')
     # l = len(dataset)
-    n = len(dataset[0]-1)
-    X = dataset[:, 1:]
-    labels = dataset[:, :1]
+    # n = len(dataset[0]-1)
+    # X = dataset[:, 1:]
+    # labels = dataset[:, :1]
 
-    c_array = c_values()
+    c_array = c_values(50, 0.1)
 
     # x = np.random.randint(1, 20, 5)
     # y = np.random.randint(1, 20, 5)
@@ -180,17 +191,29 @@ if __name__ == '__main__':
     # print(np.argsort(xyz[0])[1])
     # print(xyz[1][np.argsort(xyz[0])[1]])
 
-    cluster = clustering(c_array[1], X)
+    # generalisations = list(tuple())
+    # for x in range((len(c_array))):
+    #     cluster = clustering(c_array[x], X)
+    #     mistakes = 0
+    #     for i in range(len(cluster)):
+    #         if cluster[i] != np.round(dataset[i][0]):
+    #             mistakes += 1
+    #     generalisation_error = (mistakes / len(cluster))
+    #     generalisations.append((generalisation_error, np.round(np.round(np.arange(-50, 50.2, 0.1), 1))[x]))
+    # print(generalisations)
+    # print(min(generalisations))
+
+    # print(calculate_cluster_error(-36.8, dataset))
+    # print(calculate_cluster_error(-37, dataset))
 
     generalisations = list(tuple())
-    for x in range((len(c_array))):
-        cluster = clustering(c_array[x], X)
-        mistakes = 0
-        for i in range(len(cluster)):
-            if cluster[i] != np.round(dataset[i][0]):
-                mistakes += 1
-        generalisation_error = (mistakes / len(cluster))
-        generalisations.append((generalisation_error, np.round(np.round(np.arange(-50, 50.2, 0.1), 1))[x]))
+    p_bar = tqdm(smoothing=1)
+    ppe = ProcessPoolExecutor(max_workers=4)
+    for result in ppe.map(calculate_cluster_error, c_array, [dataset]*len(c_array)):
+        generalisations.append(result)
+        p_bar.update(1)
+
+    generalisations.sort(key=lambda x: x[1])
     print(generalisations)
     print(min(generalisations))
 
