@@ -41,13 +41,14 @@ def test(x, y):
 
 def vectorised_diagonalD(weights):
     D = np.zeros((len(weights), len(weights)))
-    np.fill_diagonal(D, np.sum(weights, axis=1))
+    np.fill_diagonal(D, np.sum(weights, axis=0))
     return D
 
 def diagonalD(weights):
     D = np.zeros((len(weights), len(weights)))
     for i in range(len(weights)):
-        D[i][i] = np.sum(weights, axis=1)[i]
+        for j in range(len(weights)):
+            D[i][i] += weights[i][j]
     return D
 
 
@@ -60,34 +61,58 @@ def sign(x):
 
 
 def clustering(c, x):
-
-    weight_matrix = vectorised_weight(c, x)
-    diagonal_matrix = vectorised_diagonalD(weight_matrix)
-    laplacian = diagonal_matrix - weight_matrix
-    eigenspace = np.linalg.eig(laplacian)
-    v_2 = eigenspace[1][1]
+    c = 2**c
+    weight_matrix = vectorised_weight(c, x)                         # should be correct
+    # print(weight_matrix)
+    diagonal_matrix = vectorised_diagonalD(weight_matrix)              # should be correct
+    # print(diagonal_matrix[1][1])
+    laplacian = diagonal_matrix - weight_matrix                         #must be correct
+    eigenspace = np.linalg.eig(laplacian)                               # correct
+    v_2 = (eigenspace[1][np.argsort(eigenspace[0])[1]])                 # this has to be correct but something is wrong?? it doesnt do any better than just eigenspace[1][1]
+    # print(np.argsort(eigenspace[0])[1])
+    # print(np.round(eigenspace[0][0:5]))
+    # v_3 = eigenspace[1][1]
+    # print(v_2)
+    # print(v_3)
+    # print(eigenspace[0])
+    # lowest_index = np.argmin(eigenspace[0])
+    # lowest = np.partition(eigenspace[:, np.newaxis], 2)[:2]
+    # print(lowest_index)
+    # print(lowest)
+    # print(np.argmin(lowest))
+    # for i in range(len(eigenspace[0])-1):
+    # if eigenspace[0][0] > eigenspace[0][1]:
+    #     # print(np.argsort(eigenspace[0])[1])
+    #     print("fuck")
+    #     lowest = np.argsort(eigenspace[0])[0]
+    #     second_lowest = np.argsort(eigenspace[0])[1]
+    #     if lowest > second_lowest:
+    #         print("double fuck")
+    # v_2 = eigenspace[1][4]
 
     cluster = np.zeros(len(v_2))
-    for i in range(len(v_2)):
-        cluster[i] = sign(v_2[i])
+    for z in range(len(v_2)):
+        if sign(v_2[z]) == 0 or sign(v_2[z]) == 1:
+            cluster[z] = 1
+        else:
+            cluster[z] = -1
+        # cluster[z] = sign(v_2[z])
     return cluster
 
-
-def vectorisedClustering(c, x):
-# not vectorised yet
-    weight_matrix = vectorised_weight(c, x)
-    diagonal_matrix = vectorised_diagonalD(weight_matrix)
-    laplacian = diagonal_matrix - weight_matrix
-    eigenspace = np.linalg.eig(laplacian)
-    v_2 = eigenspace[1][1]
-    # print(len(v_2))
-
-    cluster = np.fromfunction(sign, v_2)
-    return cluster
+# def vectorisedClustering(c, x):
+# # not vectorised yet
+#     weight_matrix = vectorised_weight(c, x)#
+#     diagonal_matrix = vectorised_diagonalD(weight_matrix)
+#     laplacian = diagonal_matrix - weight_matrix
+#     eigenspace = np.linalg.eig(laplacian)
+#     v_2 = eigenspace[1][1]
+#     # print(len(v_2))
+#
+#     cluster = np.fromfunction(sign, v_2)
+#     return cluster
 
 def c_values():
-    return 2**np.round(np.arange(-10, 10.2, 0.2), 1)
-
+    return np.round(np.arange(-50, 50.2, 0.1), 1)
 
 def correct_classification():
     for i in range(len(X)):
@@ -114,6 +139,20 @@ def original_data():
     plt.clf()
 
 
+def plot_cluster(c, data):
+    cluster_to_plot = clustering(c, data)
+    for z in range(len(cluster_to_plot)):
+        temp_marker, temp_color = marker[1], color[1]
+        if cluster_to_plot[z] == 1:
+            temp_marker, temp_color = marker[0], color[0]
+        plt.scatter(data[z, 0], data[z, 1], marker=temp_marker, color=temp_color)
+    plt.title(f"Clustering for c = 2^{str(c)}")
+    plt.xlabel("X_1")
+    plt.ylabel("X_2")
+    plt.savefig(f'./plots/clustering/cluster_{str(c)}.png')
+    plt.clf()
+
+
 if __name__ == '__main__':
     if not os.path.exists('plots/clustering'):
         os.makedirs('plots/clustering')
@@ -121,25 +160,39 @@ if __name__ == '__main__':
     marker = ["o", "x"]
     color = ['black', 'blue']
     dataset = get_data('twomoons.dat')
-    l = len(dataset)
+    # l = len(dataset)
     n = len(dataset[0]-1)
     X = dataset[:, 1:]
     labels = dataset[:, :1]
 
-    c = c_values()
-    for x in range(len(c)):
-        cluster = clustering(c[x], X)
+    c_array = c_values()
 
+    # x = np.random.randint(1, 20, 5)
+    # y = np.random.randint(1, 20, 5)
+    # z = np.random.randint(1, 20, 5)
+    # a = np.random.randint(1, 20, 5)
+    # b = np.random.randint(1, 20, 5)
+    # d = np.random.randint(1, 20, 5)
+    # xyz = (x, (y, z, a, b, d))
+    # print(xyz)
+    # print(np.argsort(xyz[0])[1])
+    # print(xyz[1][np.argsort(xyz[0])[1]])
+
+    cluster = clustering(c_array[1], X)
+
+    generalisations = list(tuple())
+    for x in range((len(c_array))):
+        cluster = clustering(c_array[x], X)
+        mistakes = 0
         for i in range(len(cluster)):
-            temp_marker, temp_color = marker[1], color[1]
-            if cluster[i] == 1:
-                temp_marker, temp_color = marker[0], color[0]
-            plt.scatter(X[i, 0], X[i, 1], marker=temp_marker, color=temp_color)
-        plt.title(f"Clustering for c = 2^{str(np.round(np.round(np.arange(-10, 10.2, 0.2), 1))[x])}")
-        plt.xlabel("X_1")
-        plt.ylabel("X_2")
-        plt.savefig(f'./plots/clustering/cluster_{str(np.round(np.arange(-10, 10.2, 0.2), 1)[x])}.png')
-        plt.clf()
+            if cluster[i] != np.round(dataset[i][0]):
+                mistakes += 1
+        generalisation_error = (mistakes / len(cluster))
+        generalisations.append((generalisation_error, np.round(np.round(np.arange(-50, 50.2, 0.1), 1))[x]))
+    print(generalisations)
+    print(min(generalisations))
+
+    plot_cluster(min(generalisations)[1], X)
 
     # l = 20
     # n = 10
