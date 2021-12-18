@@ -187,6 +187,11 @@ if __name__ == '__main__':
     # plot_cluster(min(generalisations_)[1], dataset[:, 1:],
     #              f'./plots/clustering/cluster_{str(min(generalisations_)[0])}_{str(min(generalisations_)[1])}.png')
 
+    # # plotting all values of c against the errors they produce for q1
+    # for i in range(len(generalisations_)):
+    #     plot_cluster(generalisations_[i][1], dataset[:, 1:],
+    #                  f'./plots/clustering/cluster_{str(generalisations_[i][0])}_{str(generalisations_[i][1])}_testing.png')
+
     # # question 2
     # gaussian_clustering()
 
