@@ -13,7 +13,7 @@ def random_sample(n, l):
     data = np.random.rand(1, l*n)
     return np.reshape(data, (l, n))
 
-def weight(c, x_): # this is wrong and i dont understand why
+def weight(c, x_):  # this is wrong and i dont understand why
     ell = len(x_)
     # c is a constant, x is a matrix, l is len(x)
     W = np.zeros((ell, ell))
@@ -43,6 +43,15 @@ def cluster(x_):  # cluster a vector
     return -1 + 2 * (x_ >= 0)
 
 def clustering(c, x_):  # c is an unknown constant, x is the data matrix (lxl sized)
+    """
+    this function computes the value of c necessary to use as the hyperparamter for the weight matrix, and then
+    constructs the weigth matrix, W, the diagonal matrix, D, the graph Laplacian, L, the cluster vector, v_2, as well
+    as the clustering for the vector.
+    :param c: value for generating value c
+    :param x_: data matrix
+    :return: clustering as an array
+    """
+
     c = 2**c
     weight_matrix = vectorised_weight(c, x_)
 
@@ -56,7 +65,7 @@ def clustering(c, x_):  # c is an unknown constant, x is the data matrix (lxl si
 def c_values(limits, step):
     return np.round(np.arange(-limits, limits, step), 1)
 
-def correct_classification():
+def correct_classification():  # just used for clustering the dataset with the generated labels from the dataset
     marker = ["o", "x"]
     color = ['black', 'blue']
     dataset = get_data('twomoons.dat')
@@ -72,7 +81,7 @@ def correct_classification():
     plt.savefig(f'./plots/clustering/cluster_baseline.png')
     plt.clf()
 
-def original_data():
+def original_data():  # plotting original data on its own, no clustering
     dataset = get_data('twomoons.dat')
     X = dataset[:, 1:]
     plt.scatter(X[:, 0], X[:, 1])
@@ -82,7 +91,7 @@ def original_data():
     plt.savefig(f'./plots/clustering/cluster_original_data.png')
     plt.clf()
 
-def plot_cluster(c, data, filepath):
+def plot_cluster(c, data, filepath):  # general function for plotting a given clustering for a c value
     marker = ["o", "x"]
     color = ['black', 'blue']
     cluster_to_plot = clustering(c, data)
@@ -97,7 +106,7 @@ def plot_cluster(c, data, filepath):
     plt.savefig(filepath)
     plt.clf()
 
-def calculate_cluster_error(c_value_, dataset_):
+def calculate_cluster_error(c_value_, dataset_):  # calculating the generalisation error from a given c value and data
     data_ = dataset_[:, 1:]
     labels = dataset_[:, :1]
     cluster_ = clustering(c_value_, data_)
@@ -113,6 +122,12 @@ def isotropic_gaussian(center, sd):
     return numpy.random.multivariate_normal(center, cov_matirx, 40)
 
 def gaussian_clustering():
+    """
+    executing gaussian clustering for question 2, creating 2 sets of gaussian data from different centers, labeling
+    them, combining them to form the dataset, and then running the clustering algorithm with the dataset and plotting
+    the clustering along with the un-clustered data (as its randomly generated, helps with comparing)
+    :return: 1 if successful
+    """
     sd = 0.2
     c_array_ = c_values(20, 0.2)
     neg_class = isotropic_gaussian((-0.3, -0.3), sd)
@@ -121,7 +136,6 @@ def gaussian_clustering():
     labeled_neg_class = np.c_[-1 * np.ones(len(neg_class)), np.array(neg_class)]
     labeled_pos_class = np.c_[np.ones(len(pos_class)), np.array(pos_class)]
     dataset = np.vstack((labeled_neg_class, labeled_pos_class))
-    # print(dataset)
 
     generalisations = list(tuple())
     pbar = tqdm(total=len(c_array_))
@@ -129,13 +143,14 @@ def gaussian_clustering():
     for result in ppe.map(calculate_cluster_error, c_array_, [dataset] * len(c_array_)):
         generalisations.append(result)
         pbar.update()
-    # print(generalisations)
-    print(min(generalisations))
+
+    # print(min(generalisations))
     original_gaussian_cluster(neg_class, pos_class,
                               f'./plots/clustering/gaussian_cluster_original_data_{str(min(generalisations)[0])}'
                               f'_{str(min(generalisations)[1])}.png')
     plot_cluster(min(generalisations)[1], dataset[:, 1:],
                  f'./plots/clustering/gaussian_cluster_{str(min(generalisations)[0])}_{str(min(generalisations)[1])}.png')
+    return 1
 
 def original_gaussian_cluster(neg_class, pos_class, filepath):
     dataset = np.vstack((neg_class, pos_class))
@@ -149,7 +164,7 @@ def original_gaussian_cluster(neg_class, pos_class, filepath):
 def map_labels(y_label):
     return 2 * (y_label == 1) - 1
 
-def correct_cluster_percentage(dataset_, c_):
+def correct_cluster_percentage(dataset_, c_):  # implementing CP 
     data_ = dataset_[:, 1:]
     labels = dataset_[:, :1]
     mapped_labels = map_labels(labels)
