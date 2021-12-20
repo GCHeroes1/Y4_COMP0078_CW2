@@ -1,18 +1,49 @@
-"""
-Basic Results: Perform 20 runs for d = 1, . . . , 7 each run should randomly split zipcombo into 80% train and 20%
-test. Report the mean test and train error rates as well as well as standard deviations. Thus your data table, here,
-will be 2 × 7 with each “cell” containing a mean±std.
+""".
+Repeat 1 and 2 (d∗ is now c and {1,...,7} is now S) above with a Gaussian kernel c the width of the kernel is now
+a parameter which must be optimised during cross-validation however, you will also need to perform some initial
+experiments to a decide a reasonable set S of values to cross- validate c over.
 """
 import numpy as np
 from tqdm import tqdm
 from utils import get_data, split_indices_with_shuffle, plot_accuracy
-from kernels import PolynomialKernel
+from kernels import GaussianKernel
 from perceptrons import Perceptron
 
 N_CLASSES = 10
-N_EPOCHS = 1
+N_EPOCHS = 5
 RUNS = 20
-PLOT_ACCURACY = False
+PLOT_ACCURACY = True
+BASE_DIR = '../plots/part1/q5_1/trial3'
+
+# "For an initial experiment for the parameter of gaussian kernel,
+# a logarithmic grid with basis 10 is often helpful.
+# Using a basis of 2, a finer tuning can be achieved but at a much higher cost."
+# source of the above sentence: https://scikit-learn.org/stable/auto_examples/svm/plot_rbf_parameters.html
+
+"""
+Following trials to search an optimal parameter of 'c' in gaussian kernel
+is decided based on the train and test accuracy graphs. 
+We will see if the c value is in a reasonable range
+"""
+# Trial 1
+C = np.logspace(-3, 4, 5)  # [0.001, 0.05623413251903491, 3.1622776601683795, 177.82794100389228, 10000.0]
+'''
+From trial 1 we could see that the model starts to overfit on data from c=0.05623413251903491, 
+and when c=177 and c=10000, the train accuracy fluctuates heavily.
+'''
+# Trial 2
+C = np.logspace(-3, 0, 5)  # [0.001, 0.005623413251903491, 0.03162277660168379, 0.1778279410038923, 1.0]
+'''
+Therefore, we changed the range like above.
+Now that we found an approximate upperbound of c value,
+we now want to see how the model behaves when c is less than 0.001
+'''
+# Trial 3
+C = [0.0005, 0.001, 0.005, 0.007, 0.008, 0.009]
+'''
+In the c value that's less than 0.001, we see that test accuracy is higher than the train accuracy.
+The model is optimised on training data but accuracy comes higher is testing data 
+'''
 
 # get data as X and Y
 X_data, Y_data = get_data("../zipcombo.dat")
@@ -22,15 +53,15 @@ train_errors_std = []
 test_errors_mean = []
 test_errors_std = []
 
-# iterate through all d values from 1 to 7
-for d in tqdm(range(1, 8)):
-	print(f"d = {d}")
+# iterate through all c values
+for c in tqdm(C):
+	print(f"c = {c}")
 
 	train_error_per_run = []
 	test_error_per_run = []
 
 	# kernelize data
-	kernel_class = PolynomialKernel(d)
+	kernel_class = GaussianKernel(c)
 	kernelized_matrix = kernel_class.apply_kernel(X_data)
 
 	# 20 runs
@@ -98,7 +129,8 @@ for d in tqdm(range(1, 8)):
 
 		if PLOT_ACCURACY:
 			# plot accuracy graph
-			plot_accuracy(d, run, N_EPOCHS + 1, train_accuracies, test_accuracies)
+			plot_accuracy(c, run, N_EPOCHS + 1, train_accuracies, test_accuracies,
+			              save_dir=BASE_DIR)
 
 	# mean of errors and std:
 	train_errors_mean.append(np.mean(train_error_per_run))
@@ -106,7 +138,8 @@ for d in tqdm(range(1, 8)):
 	test_errors_mean.append(np.mean(test_error_per_run))
 	test_errors_std.append(np.std(test_error_per_run))
 
-with open('../plots/part1/q1/log.txt', 'w') as f:
+with open(f'{BASE_DIR}/log.txt', 'w') as f:
+	f.write(f"Kernel parameter C: {C}\n\n")
 	f.write(f"Mean train error: {train_errors_mean}\n")
 	f.write(f"STD training error: {train_errors_std}\n")
 	f.write(f"Mean testing error: {test_errors_mean}\n")

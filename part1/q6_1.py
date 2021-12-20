@@ -1,21 +1,25 @@
-"""
-Basic Results: Perform 20 runs for d = 1, . . . , 7 each run should randomly split zipcombo into 80% train and 20%
-test. Report the mean test and train error rates as well as well as standard deviations. Thus your data table, here,
-will be 2 × 7 with each “cell” containing a mean±std.
-"""
 import numpy as np
 from tqdm import tqdm
 from utils import get_data, split_indices_with_shuffle, plot_accuracy
 from kernels import PolynomialKernel
 from perceptrons import Perceptron
 
-N_CLASSES = 10
-N_EPOCHS = 1
-RUNS = 20
-PLOT_ACCURACY = False
-
-# get data as X and Y
 X_data, Y_data = get_data("../zipcombo.dat")
+
+# K-Class Classifier Parameters:
+N_CLASSES = 10
+N_CLASSIFIERS = int(N_CLASSES * (N_CLASSES - 1) / 2)
+N_EPOCHS = 20
+RUNS = 20
+PLOT_ACCURACY = True
+BASE_DIR = '../plots/part1/q6_1'
+
+classifier_values = np.zeros((N_CLASSIFIERS, 2))
+idx = 0
+for c1 in np.arange(10):
+	for c2 in np.arange(c1 + 1, 10):
+		classifier_values[idx] = [c1, c2]
+		idx += 1
 
 train_errors_mean = []
 train_errors_std = []
@@ -50,8 +54,8 @@ for d in tqdm(range(1, 8)):
 		n_test_samples = len(test_indices)
 
 		# initiate perceptron model class
-		alphas = np.zeros((N_CLASSES, n_train_samples))
-		model = Perceptron(alphas, kernelized_matrix, N_CLASSES)
+		alphas = np.zeros((N_CLASSIFIERS, n_train_samples))
+		ovo_model = Perceptron(alphas, kernelized_matrix, N_CLASSES, method='ovo', classifier_values=classifier_values)
 
 		# save results
 		train_corrects = []
@@ -62,12 +66,12 @@ for d in tqdm(range(1, 8)):
 		test_mistakes = []
 
 		for epoch in range(1, N_EPOCHS + 1):
-			alphas = model.fit(train_indices, X_train, Y_train)
+			alphas = ovo_model.fit(train_indices, X_train, Y_train)
 
 			# GET TRAIN ACCURACY
 			kernel_vals = kernelized_matrix[train_indices][:, train_indices]
-			pred = np.array(list(map(np.argmax, zip(*(alphas.dot(kernel_vals))))))
-			train_correct = len(np.where((Y_train - pred) == 0)[0])
+			pred = ovo_model.predict_ovo(alphas, kernel_vals)
+			train_correct = len(np.where((Y_train - pred.astype(int)) == 0)[0])
 
 			# Record results:
 			train_corrects.append(train_correct)
@@ -80,8 +84,8 @@ for d in tqdm(range(1, 8)):
 
 			# GET TEST ACCURACY
 			kernel_vals = kernelized_matrix[train_indices][:, test_indices]
-			pred = np.array(list(map(np.argmax, zip(*(alphas.dot(kernel_vals))))))
-			test_correct = len(np.where((Y_test - pred) == 0)[0])
+			pred = ovo_model.predict_ovo(alphas, kernel_vals)
+			test_correct = len(np.where((Y_test - pred.astype(int)) == 0)[0])
 
 			# Record results:
 			test_corrects.append(test_correct)
@@ -98,7 +102,7 @@ for d in tqdm(range(1, 8)):
 
 		if PLOT_ACCURACY:
 			# plot accuracy graph
-			plot_accuracy(d, run, N_EPOCHS + 1, train_accuracies, test_accuracies)
+			plot_accuracy(d, run, N_EPOCHS + 1, train_accuracies, test_accuracies, save_dir=BASE_DIR)
 
 	# mean of errors and std:
 	train_errors_mean.append(np.mean(train_error_per_run))
@@ -106,7 +110,7 @@ for d in tqdm(range(1, 8)):
 	test_errors_mean.append(np.mean(test_error_per_run))
 	test_errors_std.append(np.std(test_error_per_run))
 
-with open('../plots/part1/q1/log.txt', 'w') as f:
+with open('../plots/part1/q6_1/log.txt', 'w') as f:
 	f.write(f"Mean train error: {train_errors_mean}\n")
 	f.write(f"STD training error: {train_errors_std}\n")
 	f.write(f"Mean testing error: {test_errors_mean}\n")
