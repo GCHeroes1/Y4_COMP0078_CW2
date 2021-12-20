@@ -10,8 +10,16 @@ np.random.seed(0)
 # least squares, find function f(x) = np.dot(w.T, x) which best fits data
 # prediction is y_i = np.dot(w.T, x_i)
 
-
 def average_sample_complexity(dimension):
+    """
+    create the testing_dataset initially to test the trained weights on, generate predictions for each training and
+    testing set, check the generalisation error for the training and repeat until 10% error is achieved (increasing
+    training set size in order to improve training), once achieved, repeat the same test again with a new testing
+    dataset to eventually calculate the mean and standard deviation of sample size required to achieve a 10%
+    generalisation error for the current dimension.
+    :param dimension: dimension defines the dimensionality of the data points
+    :return: return the dimension (index for plotting), and sample average (points to plot), and sample_std (error bars)
+    """
     sample_sizes = list()
     for z in range(10):
         sample_count = 1
