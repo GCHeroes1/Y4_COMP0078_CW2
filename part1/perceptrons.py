@@ -36,9 +36,11 @@ class Perceptron:
 			y_true = self._encode_label(y[i])
 
 			if self.method == 'ovr':
-				self.alphas[:, i] -= np.where(np.multiply(cls_vals, y_true) <= 0, y_hat, 0)
+				condition = np.multiply(cls_vals, y_true) <= 0
+				self.alphas[:, i] -= np.where(condition, y_hat, 0)
 			elif self.method == 'ovo':
-				self.alphas[:, i] += np.where(y_hat != y_true, y_true, 0)
+				condition = y_hat != y_true
+				self.alphas[:, i] += np.where(condition, y_true, 0)
 
 		return self.alphas
 
@@ -49,19 +51,22 @@ class Perceptron:
 		y_pred = (alphas.dot(kernel_vals) > 0) * 2 - 1
 		vote = np.zeros((10, kernel_vals.shape[1]))
 		for cls_i in range(self.classifier_values.shape[0]):
-			neg = (y_pred[cls_i, :] == -1)
-			pos = (y_pred[cls_i, :] == 1)
+			row_pos = int(self.classifier_values[cls_i, 0])
+			row_neg = int(self.classifier_values[cls_i, 1])
 
-			vote[int(self.classifier_values[cls_i, 0]), pos] += 1
-			vote[int(self.classifier_values[cls_i, 1]), neg] += 1
+			pos = y_pred[cls_i, :] == 1
+			neg = y_pred[cls_i, :] == -1
+
+			vote[row_pos, pos] += 1
+			vote[row_neg, neg] += 1
 
 		return np.argmax(vote, axis=0)
 
-	def _encode_label(self, label: int):
+	def _encode_label(self, label):
 		if self.method == 'ovr':
-			ret = np.full((self.n_classifiers,), -1)
-			ret[label] = 1
-			return ret
+			labels = np.full((self.n_classifiers,), -1)
+			labels[label] = 1
+			return labels
 		elif self.method == 'ovo':
 			labels = np.zeros((self.n_classifiers,))
 			for i in range(self.n_classifiers):
