@@ -24,6 +24,12 @@ def create_dataset(data, label):
     return dataset_
 
 def predict(sample, weights):
+    """
+    prediction for perceptron, the dot product between the x-coordinate and weight
+    :param sample: x-coordinate
+    :param weights: weights
+    :return: 1 if greater or equal to 0, otherwise -1
+    """
     y_hat_t = np.dot(sample, weights)
     if y_hat_t >= 0:
         return 1
@@ -31,9 +37,10 @@ def predict(sample, weights):
         return -1
 
 def train_weights(training_set):
+    # training weights by generating predictions and updating weights if a mistake was made
     weights = np.zeros(len(training_set[0]))
     mistakes = 0
-    for t in range (len(training_set[0])):
+    for t in range(len(training_set[0])):
         for sample in training_set:
             y_hat_t = predict(sample, weights)
             y_t = sample[-1]
@@ -44,6 +51,8 @@ def train_weights(training_set):
     return weights
 
 def perceptron(training_set, testing_set):
+    # main perceptron algorithm, firstly train the weights and then making predictions on the testing set to be used
+    # later
     predictions = np.zeros(len(testing_set))
     weights = train_weights(training_set)
     for i in range(len(testing_set)):
@@ -72,6 +81,15 @@ def dataset_setup(n, m):
     return dataset_
 
 def average_sample_complexity(dimension):
+    """
+    create the testing_dataset initially to test the trained weights on, generate predictions for each training and
+    testing set, check the generalisation error for the training and repeat until 10% error is achieved (increasing
+    training set size in order to improve training), once achieved, repeat the same test again with a new testing
+    dataset to eventually calculate the mean and standard deviation of sample size required to achieve a 10%
+    generalisation error for the current dimension.
+    :param dimension: dimension defines the dimensionality of the data points
+    :return: return the dimension (index for plotting), and sample average (points to plot), and sample_std (error bars)
+    """
     sample_sizes = list()
     for z in range(10):
         sample_count = 1
